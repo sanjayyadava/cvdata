@@ -1,0 +1,75 @@
+from fastapi import APIRouter, HTTPException, Response
+from fastapi.responses import StreamingResponse
+from typing import List
+from app.models.cv import CVDocument
+from app.database import (
+    get_all_cvs,
+    get_cv_by_id,
+    save_cv,
+    delete_cv,
+    get_default_sample_cv
+)
+from app.services.pdf_service import generate_pdf_buffer
+import urllib.parse
+
+router = APIRouter(prefix="/api/cv", tags=["CV Management"])
+
+@router.get("", response_model=List[CVDocument])
+def list_resumes():
+    """List all saved CV documents."""
+    return get_all_cvs()
+
+@router.get("/sample", response_model=CVDocument)
+def get_sample_resume():
+    """Return pre-populated sample CV data."""
+    return get_default_sample_cv()
+
+@router.get("/{cv_id}", response_model=CVDocument)
+def get_resume(cv_id: str):
+    """Retrieve a single CV by its identifier."""
+    cv = get_cv_by_id(cv_id)
+    if not cv:
+        raise HTTPException(status_code=404, detail="CV not found")
+    return cv
+
+@router.post("", response_model=CVDocument)
+def create_or_save_resume(cv: CVDocument):
+    """Create or overwrite a CV document."""
+    return save_cv(cv)
+
+@router.put("/{cv_id}", response_model=CVDocument)
+def update_resume(cv_id: str, cv: CVDocument):
+    """Update an existing CV document."""
+    cv.id = cv_id
+    return save_cv(cv)
+
+@router.delete("/{cv_id}")
+def remove_resume(cv_id: str):
+    """Delete a CV document."""
+    success = delete_cv(cv_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="CV not found or already removed")
+    return {"message": "CV successfully deleted", "id": cv_id}
+
+@router.post("/export-pdf")
+def export_cv_pdf(cv: CVDocument):
+    """Generate and stream a PDF file directly from the provided CV data."""
+    pdf_buffer = generate_pdf_buffer(cv)
+    filename = f"{cv.personal.fullName.replace(' ', '_')}_Resume.pdf" if cv.personal.fullName else "Resume.pdf"
+    encoded_filename = urllib.parse.quote(filename)
+    
+    return StreamingResponse(
+        pdf_buffer,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f"attachment; filename=\"{filename}\"; filename*=UTF-8''{encoded_filename}"
+        }
+    )
+
+@router.get("/{cv_id}/export-pdf")
+def export_saved_cv_pdf(cv_id: str):
+    """Generate and stream a PDF for a saved CV."""
+    cv = get_cv_by_id(cv_id)
+    if not cv:
+        raise HTTPException(status_code=404, detail="CV not found")
+    return export_cv_pdf(cv)
