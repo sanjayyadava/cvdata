@@ -225,17 +225,15 @@ export function ResumeProvider({ children }) {
     }));
   }
 
-  function updatePersonalInfo(field, value) {
-    setCv((previous) => ({
-      ...previous,
-
-      personalInfo: {
-        ...(previous.personalInfo || {}),
-        [field]: value,
-      },
-    }));
-  }
-
+function updatePersonal(field, value) {
+  setCv((previous) => ({
+    ...previous,
+    personalInfo: {
+      ...(previous.personalInfo || {}),
+      [field]: value,
+    },
+  }));
+}
   function resetCV() {
     setCv({
       ...DEFAULT_CV,
@@ -390,7 +388,8 @@ export function ResumeProvider({ children }) {
     setZoomLevel,
 
     updateResume,
-    updatePersonalInfo,
+        
+    updatePersonal,
 
     cvId: cv?.id || null,
 
@@ -413,6 +412,7 @@ export function ResumeProvider({ children }) {
     triggerAtsAnalysis,
     atsLoading,
     atsResult,
+    updatePersonal,
 
     exportJson,
     importJson,

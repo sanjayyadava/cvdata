@@ -2,12 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import engine, Base
-from app.db_models.cv import CV
-from app.routers import cv
-from app.database import engine, Base
-
 from app.db_models import (
-     User,
+    User,
     CV,
     Skill,
     Experience,
@@ -16,16 +12,24 @@ from app.db_models import (
     Certification,
     Language,
     Template,
-    ATSReport
+    ATSReport,
 )
 
+from app.routers import cv
+
+
+# Create database tables
 Base.metadata.create_all(bind=engine)
 
+
+# Create FastAPI application
 app = FastAPI(
     title="CV Builder API",
-    version="1.0.0"
+    version="1.0.0",
 )
 
+
+# CORS configuration
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -34,4 +38,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+# Register CV routes
 app.include_router(cv.router)

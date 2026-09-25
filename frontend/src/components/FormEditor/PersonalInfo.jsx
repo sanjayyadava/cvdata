@@ -5,9 +5,12 @@ import { Linkedin, Github } from '../icons/BrandIcons';
 
 export default function PersonalInfo() {
   const { cv, updatePersonal } = useResume();
-  const personal = cv.personal || {};
+  const personal = cv.personalInfo || {};
 
-  const summaryWords = personal.summary ? personal.summary.trim().split(/\s+/).filter(Boolean).length : 0;
+  
+  const summaryWords = personal.summary
+    ? personal.summary.trim().split(/\s+/).filter(Boolean).length
+    : 0;
 
   return (
     <div className="space-y-5 animate-in fade-in duration-200">
